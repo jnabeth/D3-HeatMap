@@ -3,30 +3,18 @@ document.addEventListener('DOMContentLoaded',function(){
     req.open("GET",'https://raw.githubusercontent.com/freeCodeCamp/ProjectReferenceData/master/global-temperature.json',true);
     req.send();
     req.onload=function(){
-      dataset=JSON.parse(req.responseText);
+      fullDataset=JSON.parse(req.responseText);
 
-      var margin = {top: 20, right: 40, bottom: 20, left: 40},
+      let dataset = fullDataset.monthlyVariance
+
+      var margin = {top: 20, right: 40, bottom: 20, left: 65},
       width = 800 - margin.left - margin.right,
       height = 500 - margin.top - margin.bottom;
 
-      const minX = d3.min(dataset, (d) => d.year)-1;
-      const maxX = d3.max(dataset, (d) => d.year)+1;
-      const minY = d3.min(dataset, (d) => d.month);
-      const maxY = d3.max(dataset, (d) => d.month);
+      const minVar = d3.min(dataset, (d) => d.variance);
+      const maxVar = d3.max(dataset, (d) => d.variance);
 
-      const xScale = d3.scaleLinear()
-                       .domain([minX, maxX])
-                       .range([0, width]);
-
-      const yScale = d3.scaleLinear()
-                       .domain([minY, maxY])
-                       .range([0, height]);
-      
-      const xAxis = d3.axisBottom(xScale)
-                      .tickFormat(d3.format(""));
-      
-      const yAxis = d3.axisLeft(yScale)
-
+      // append the svg object to the body of the page
       const svg = d3.select("body")
               .append("svg")
               .attr("width", width + margin.left + margin.right)
@@ -34,80 +22,58 @@ document.addEventListener('DOMContentLoaded',function(){
               .append("g")
               .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
+      // Labels of row and columns -> unique identifier of the column called 'year' and 'month'
+      var myGroups = d3.map(dataset, function(d){return d.year;}).keys()
+      var myVars = d3.map(dataset, function(d){return d.month;}).keys()
+      let month = ["January","February","March","April","May","June","July", "August","September","October","November","December"];
+      
+      // Build X scales and axis:
+      const xScale = d3.scaleBand()
+        .range([0, width])
+        .domain(myGroups)
+        .padding(0.05);
+      svg.append("g")
+        .attr("id", "x-axis")
+        .attr("transform", "translate(0, " + height + ")")
+        .call(d3.axisBottom(xScale)
+                .tickSize(0)
+                .tickValues(xScale.domain().filter(function(d,i){ return !(i%22)})))
+        .select(".domain").remove()
+
+      // Build Y scales and axis:
+      const yScale = d3.scaleBand()
+        .range([0, height])
+        .domain(myVars)
+        .padding(0.05);
+      svg.append("g")
+        .attr("id", "y-axis")
+        .call(d3.axisLeft(yScale)
+                .tickFormat((d,i) => month[i])
+                .tickSize(0))
+        .select(".domain").remove()
+
+      // Create tooltip
       var tooltip = d3.select("body").append("div")
                     .attr("class", "tooltip")
                     .attr("id", "tooltip")
                     .style("opacity", 0);
-                    
-      var color = d3.scaleOrdinal(d3.schemeCategory10);
+      
+      //Build color scale
+      var myColor = d3.scaleSequential()
+        .interpolator(d3.interpolateInferno)
+        .domain([minVar,maxVar]);
 
-      svg.selectAll("circle")
-      .data(dataset)
-      .enter()
-      .append("circle")
-      .attr("class", "dot")
-      .attr("data-xvalue", (d, i) => d.Year)
-      .attr("data-yvalue", function(d){
-        var t = new Date(1986,3,17,12,d.Time.substring(0,2),d.Time.substring(3,5));
-        return t;
-      })
-      .attr("cx", (d, i) => xScale(d.Year))
-      .attr("cy", (d, i) => yScale(d.Seconds))
-      .attr("r", 5)
-      .style("fill", function(d){
-          if (d.Doping === "") {
-              return color("No Doping Allegations")
-          } else {
-              return color("Doping Allegations")
-          }
-        })
-      .on("mouseover", function(d) {
-        tooltip.transition()
-             .duration(200)
-             .style("opacity", .9);
-        tooltip.html(d.Name + ": " + d.Nationality + "<br/>Year: " + d.Year + ", Time: " + d.Time + "<br/>" +  d.Doping)
-             .style("left", d3.event.pageX+ "px")
-             .style("top", d3.event.pageY + "px")
-             .attr("data-year", d.Year)
-         })
-     .on("mouseout", function(d) {
-        tooltip.transition()
-             .duration(500)
-             .style("opacity", 0);
-     });
-
-      // Display x-axis
-     svg.append("g")
-        .attr("id", "x-axis")
-        .attr("transform", "translate(0, " + height + ")")
-        .call(xAxis)
-
-      // Display y-axis
-      svg.append("g")
-       .attr("id", "y-axis")
-       .call(yAxis);
-       
-      // draw legend
-      var legend = svg.selectAll(".legend")
-        .data(color.domain())
-        .enter().append("g")
-        .attr("class", "legendClass")
-        .attr("id","legend")
-        .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
-
-      // draw legend colored rectangles
-      legend.append("rect")
-        .attr("x", width - 18)
-        .attr("width", 18)
-        .attr("height", 18)
-        .style("fill", color);
-
-      // draw legend text
-      legend.append("text")
-        .attr("x", width - 24)
-        .attr("y", 9)
-        .attr("dy", ".35em")
-        .style("text-anchor", "end")
-        .text(function(d) { return d;})
+      svg.selectAll()
+        .data(dataset, (d,i) => d.year+':'+d.month)
+        .enter()
+        .append("rect")
+        .attr("x", (d,i) => xScale(d.year))
+        .attr("y", (d,i) => yScale(d.month))
+        .attr("width", xScale.bandwidth())
+        .attr("height", yScale.bandwidth())
+        .style("fill", (d,i) => myColor(d.variance))
+        .style("stroke-width", 4)
+        .style("stroke", "none")
+        .style("opacity", 0.8)
   };
 });
