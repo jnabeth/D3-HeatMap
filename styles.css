@@ -1,0 +1,43 @@
+rect.bar:hover {
+    fill: #FF3B3F;
+  }
+
+body {
+  font-family: Verdana, sans-serif;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  vertical-align: middle;
+  background-color: #CAEBF2;
+}
+
+div.tooltip {
+    position: absolute;
+    text-align: left;
+    width: auto;
+    height: auto;
+    padding: 2px;
+    font: 12px sans-serif;
+    background: lightsteelblue;
+    border: 0px;
+    border-radius: 8px;
+    pointer-events: none;
+}
+
+svg {
+  align-self: center;
+  background-color: white;
+  padding: 10px;
+  box-shadow: 0px 0px 10px 5px #A9A9A9;
+}
+
+.legendClass rect {
+  fill:white;
+  stroke:black;
+  opacity:0.8;
+}
+
+  #header {
+    text-align: center;
+}
