@@ -8,8 +8,8 @@ document.addEventListener('DOMContentLoaded',function(){
       let dataset = fullDataset.monthlyVariance
 
       var margin = {top: 20, right: 40, bottom: 20, left: 65},
-      width = 800 - margin.left - margin.right,
-      height = 500 - margin.top - margin.bottom;
+      width = 1200 - margin.left - margin.right,
+      height = 400 - margin.top - margin.bottom;
 
       const minVar = d3.min(dataset, (d) => d.variance);
       const maxVar = d3.max(dataset, (d) => d.variance);
@@ -26,25 +26,28 @@ document.addEventListener('DOMContentLoaded',function(){
       var myGroups = d3.map(dataset, function(d){return d.year;}).keys()
       var myVars = d3.map(dataset, function(d){return d.month;}).keys()
       let month = ["January","February","March","April","May","June","July", "August","September","October","November","December"];
-      
+      let yearTicks = myGroups.filter(x => x%10==0)
+
+      console.log(yearTicks)
+
       // Build X scales and axis:
       const xScale = d3.scaleBand()
         .range([0, width])
         .domain(myGroups)
-        .padding(0.05);
+        .padding(0.0);
       svg.append("g")
         .attr("id", "x-axis")
         .attr("transform", "translate(0, " + height + ")")
         .call(d3.axisBottom(xScale)
                 .tickSize(0)
-                .tickValues(xScale.domain().filter(function(d,i){ return !(i%22)})))
+                .tickValues(yearTicks))
         .select(".domain").remove()
 
       // Build Y scales and axis:
       const yScale = d3.scaleBand()
         .range([0, height])
         .domain(myVars)
-        .padding(0.05);
+        .padding(0.0);
       svg.append("g")
         .attr("id", "y-axis")
         .call(d3.axisLeft(yScale)
@@ -60,7 +63,7 @@ document.addEventListener('DOMContentLoaded',function(){
       
       //Build color scale
       var myColor = d3.scaleSequential()
-        .interpolator(d3.interpolateInferno)
+        .interpolator(d3.interpolateWarm)
         .domain([minVar,maxVar]);
 
       svg.selectAll()
