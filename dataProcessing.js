@@ -7,9 +7,9 @@ document.addEventListener('DOMContentLoaded',function(){
 
       let dataset = fullDataset.monthlyVariance
 
-      var margin = {top: 20, right: 40, bottom: 20, left: 65},
+      var margin = {top: 20, right: 40, bottom: 100, left: 65},
       width = 1200 - margin.left - margin.right,
-      height = 400 - margin.top - margin.bottom;
+      height = 500 - margin.top - margin.bottom;
 
       const minVar = d3.min(dataset, (d) => d.variance);
       const maxVar = d3.max(dataset, (d) => d.variance);
@@ -27,8 +27,6 @@ document.addEventListener('DOMContentLoaded',function(){
       var myVars = d3.map(dataset, function(d){return d.month;}).keys()
       let month = ["January","February","March","April","May","June","July", "August","September","October","November","December"];
       let yearTicks = myGroups.filter(x => x%10==0)
-
-      console.log(yearTicks)
 
       // Build X scales and axis:
       const xScale = d3.scaleBand()
@@ -61,11 +59,15 @@ document.addEventListener('DOMContentLoaded',function(){
                     .attr("id", "tooltip")
                     .style("opacity", 0);
       
+      var legendElementWidth = 40;
+      var legendElementHeight = 40;
+      var colors = ["#173F5F", "#20639B", "#c7e9b4","#edf8b1", "#F6D55C","#f0b03a", "#ED553B", "#ed003f"];
+      
       //Build color scale
-      var myColor = d3.scaleSequential()
-        .interpolator(d3.interpolateWarm)
-        .domain([minVar,maxVar]);
-
+      var myColor = d3.scaleQuantile()
+        .range(colors)
+        .domain([minVar, maxVar]);
+   
       svg.selectAll()
         .data(dataset, (d,i) => d.year+':'+d.month)
         .enter()
@@ -77,6 +79,29 @@ document.addEventListener('DOMContentLoaded',function(){
         .style("fill", (d,i) => myColor(d.variance))
         .style("stroke-width", 4)
         .style("stroke", "none")
-        .style("opacity", 0.8)
+        .style("opacity", 0.8);
+
+        // Draw legend
+        var legend = svg.selectAll(".legend")
+          .data(myColor.quantiles())
+          .enter().append("g")
+          .attr("class", "legend");
+
+        // Draw legend colored rectangles
+        legend.append("rect")
+          .attr("x", function(d, i) { return legendElementWidth * i; })
+          .attr("y", height+legendElementHeight)
+          .attr("width", legendElementWidth)
+          .attr("height", legendElementHeight)
+          .style("fill", function(d, i) { return colors[i]; });
+
+        legend.append("text")
+          .attr("class", "mono")
+          .text(function(d) { return "≥ " + Math.round(d); })
+          .attr("x", function(d, i) { return (legendElementWidth * i)+legendElementWidth/5; })
+          .attr("y", height+2.5*legendElementHeight);
+
+        legend.exit().remove();
+        
   };
 });

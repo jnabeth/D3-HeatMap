@@ -7,7 +7,7 @@ body {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: left;
   vertical-align: middle;
   background-color: #CAEBF2;
 }
@@ -40,4 +40,10 @@ svg {
 
   #header {
     text-align: center;
+}
+
+text.mono {
+  font-size: 9pt;
+  font-family: Consolas, courier;
+  fill: #aaa;
 }
