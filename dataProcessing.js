@@ -11,6 +11,9 @@ document.addEventListener('DOMContentLoaded',function(){
       width = 1200 - margin.left - margin.right,
       height = 500 - margin.top - margin.bottom;
 
+      const minTemp = 8.66 + d3.min(dataset, (d) => d.variance);
+      const maxTemp = 8.66 + d3.max(dataset, (d) => d.variance);
+
       const minVar = d3.min(dataset, (d) => d.variance);
       const maxVar = d3.max(dataset, (d) => d.variance);
 
@@ -79,7 +82,18 @@ document.addEventListener('DOMContentLoaded',function(){
         .style("fill", (d,i) => myColor(d.variance))
         .style("stroke-width", 4)
         .style("stroke", "none")
-        .style("opacity", 0.8);
+        .style("opacity", 0.8)
+        .on("mouseover", function(d) {
+          var temp = (8.66 + d.variance).toFixed(2)
+          tooltip.transition()
+            .duration(200)
+            .style("opacity", .9)
+            .style("text-align", "center")
+          tooltip.html(d.year + " - " + month[d.month] + "<br/> Temperature: " + temp + "&#176;C" + "<br/> Variance: " + d.variance.toFixed(2) + "&#176;C")
+            .style("left", d3.event.pageX+ "px")
+            .style("top", d3.event.pageY + "px")
+            .attr("data-year", d.Year)
+        })
 
         // Draw legend
         var legend = svg.selectAll(".legend")
@@ -100,8 +114,8 @@ document.addEventListener('DOMContentLoaded',function(){
           .text(function(d) { return "≥ " + Math.round(d); })
           .attr("x", function(d, i) { return (legendElementWidth * i)+legendElementWidth/5; })
           .attr("y", height+2.5*legendElementHeight);
-
-        legend.exit().remove();
+        
+          legend.exit().remove();
         
   };
 });
