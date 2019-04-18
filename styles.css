@@ -32,13 +32,7 @@ svg {
   box-shadow: 0px 0px 10px 5px #A9A9A9;
 }
 
-.legendClass rect {
-  fill:white;
-  stroke:black;
-  opacity:0.8;
-}
-
-  #header {
+#header {
     text-align: center;
 }
 

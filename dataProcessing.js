@@ -11,8 +11,8 @@ document.addEventListener('DOMContentLoaded',function(){
       width = 1200 - margin.left - margin.right,
       height = 500 - margin.top - margin.bottom;
 
-      const minTemp = 8.66 + d3.min(dataset, (d) => d.variance);
-      const maxTemp = 8.66 + d3.max(dataset, (d) => d.variance);
+      const minTemp = (fullDataset.baseTemperature + d3.min(dataset, (d) => d.variance)).toFixed(2);
+      const maxTemp = (fullDataset.baseTemperature + d3.max(dataset, (d) => d.variance)).toFixed(2);
 
       const minVar = d3.min(dataset, (d) => d.variance);
       const maxVar = d3.max(dataset, (d) => d.variance);
@@ -69,8 +69,7 @@ document.addEventListener('DOMContentLoaded',function(){
       //Build color scale
       var myColor = d3.scaleQuantile()
         .range(colors)
-        .domain([minVar, maxVar]);
-   
+        .domain([minTemp, maxTemp]);
       svg.selectAll()
         .data(dataset, (d,i) => d.year+':'+d.month)
         .enter()
@@ -79,27 +78,43 @@ document.addEventListener('DOMContentLoaded',function(){
         .attr("y", (d,i) => yScale(d.month))
         .attr("width", xScale.bandwidth())
         .attr("height", yScale.bandwidth())
-        .style("fill", (d,i) => myColor(d.variance))
+        .style("fill", (d,i) => myColor(fullDataset.baseTemperature + d.variance))
         .style("stroke-width", 4)
         .style("stroke", "none")
         .style("opacity", 0.8)
+        .attr("class","cell")
+        .attr("data-month", d => d.month-1)
+        .attr("data-year", d => d.year)
+        .attr("data-temp",d => fullDataset.baseTemperature + d.variance)
         .on("mouseover", function(d) {
-          var temp = (8.66 + d.variance).toFixed(2)
+          var temp = (fullDataset.baseTemperature + d.variance).toFixed(2)
           tooltip.transition()
             .duration(200)
             .style("opacity", .9)
             .style("text-align", "center")
-          tooltip.html(d.year + " - " + month[d.month] + "<br/> Temperature: " + temp + "&#176;C" + "<br/> Variance: " + d.variance.toFixed(2) + "&#176;C")
-            .style("left", d3.event.pageX+ "px")
+          tooltip.html(d.year + " - " + month[d.month-1] + "<br/> Temperature: " + temp + "&#176;C" + "<br/> Variance: " + d.variance.toFixed(2) + "&#176;C")
+            .style("left", d3.event.pageX + "px")
             .style("top", d3.event.pageY + "px")
-            .attr("data-year", d.Year)
+            .attr("data-year", d.year)
+          d3.select(this)
+            .style("stroke", "black")
+            .style("stroke-width", 1)
+            .style("opacity", 0.9)
         })
+        .on("mouseout", function(d) {
+          tooltip.transition()
+            .duration(200)
+            .style("opacity", 0);
+          d3.select(this)
+            .style("stroke", "none")
+            .style("opacity", 0.9)
+       });
 
         // Draw legend
         var legend = svg.selectAll(".legend")
           .data(myColor.quantiles())
           .enter().append("g")
-          .attr("class", "legend");
+          .attr("id", "legend");
 
         // Draw legend colored rectangles
         legend.append("rect")
@@ -107,7 +122,7 @@ document.addEventListener('DOMContentLoaded',function(){
           .attr("y", height+legendElementHeight)
           .attr("width", legendElementWidth)
           .attr("height", legendElementHeight)
-          .style("fill", function(d, i) { return colors[i]; });
+          .style("fill", function(d, i) { return colors[i]; });          
 
         legend.append("text")
           .attr("class", "mono")
